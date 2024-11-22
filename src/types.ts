@@ -2,9 +2,11 @@
  * This file contains the typescript interfaces for the plugin events.
  */
 
-export interface ThemePluginEvent {
+interface MessageData {
+  [key: string]: string;
+}
+export interface PluginMessageEvent {
   type: string;
   content: string;
+  data: MessageData;
 }
-
-export type PluginMessageEvent = ThemePluginEvent;
