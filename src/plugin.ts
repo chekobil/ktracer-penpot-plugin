@@ -9,7 +9,7 @@ const selectShape = (shape: Shape) => {
   penpot.selection = [shape];
 };
 
-penpot.ui.open("Svelte example plugin", `?theme=${penpot.theme}`);
+penpot.ui.open("Iconify.uno", `?theme=${penpot.theme}`);
 
 penpot.ui.onMessage((message: PluginMessageEvent) => {
   if (message.type === "create-text") {
@@ -18,6 +18,10 @@ penpot.ui.onMessage((message: PluginMessageEvent) => {
       centerShape(shape);
       selectShape(shape);
     }
+  } else if (message.type === "create-svg") {
+    const svg = message.content;
+    const shapeName = message.data.icon;
+    const shapeSize = message.data.size;
   }
 });
 penpot.on("themechange", (theme) => {
