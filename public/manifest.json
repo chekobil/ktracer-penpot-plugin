@@ -1,0 +1,13 @@
+{
+  "name": "Iconify.uno",
+  "description": "All popular icon sets in one framework. 200k + open source vector icons",
+  "code": "/plugin.js",
+  "icon": "/icon.png",
+  "permissions": [
+    "page:read",
+    "content:read",
+    "content:write",
+    "file:read",
+    "selection:read"
+  ]
+}
