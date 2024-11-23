@@ -33,7 +33,7 @@
   const useAxios = createAxiosInstance("https://api.iconify.design", {});
 
   let theme = $state("");
-  let iconSize = $state(24);
+  let iconSize = $state(0);
   let searchQuery = $state("");
   let iconList: string[] = $state([]);
   let iconCollections: CollectionItem[] = $state([]);
@@ -44,6 +44,11 @@
   let totalPages = $derived(Math.ceil(iconList?.length / iconsPerPage) || 0);
   let loadedPages = $state(1);
   let loading = $state(false);
+  let sizeValues = $state([16, 24, 32, 48]);
+
+  const changeIconSize = (size: number) => {
+    iconSize = size;
+  };
   onMount(async () => {
     // Initial theme from the URL
     const windowUrl = new URL(window.location.href);
@@ -52,11 +57,15 @@
     // Get icon collections
     const url = `collections`;
     const res: CollectionsApi = await useAxios(url, {});
-    if (Object.entries(res.data)?.length)
-      iconCollections = Object.entries(res.data).map(([prefix, col]) => ({
-        name: col.name,
+    if (Object.keys(res.data)?.length) {
+      const validKeys = Object.keys(res.data).filter(
+        (key) => !res.data[key].hidden
+      );
+      iconCollections = validKeys.map((prefix) => ({
+        name: res.data[prefix].name,
         prefix,
       }));
+    }
   });
   // Watch for theme changes
   const handleMessage = (event: MessageEvent) => {
@@ -65,24 +74,26 @@
     }
   };
   // Search for icons based on a query
-  const searchIcons = async (query: string) => {
+  const searchIcons = async (query: string, selected: string[]) => {
     if (!query) return;
     const searchLimit = 999;
-    const searchUrl = `search?query=${query}&limit=${searchLimit}`;
+    let prefix = "";
+    if (selected?.length === 1) prefix = `&prefix=${selected.join(",")}`;
+    else if (selected?.length > 1) prefix = `&prefixes=${selected.join(",")}`;
+    const searchUrl = `search?query=${query}&limit=${searchLimit}${prefix}`;
     const searchResult = await useAxios(searchUrl, {});
     return searchResult.data.icons;
   };
   const groupIcons = (list: string[], selected: string[]) => {
     const groups: IconGroups = {};
+    const iconList: string[] = [];
     list.forEach((icon: string) => {
       const [collection, name] = icon.split(":");
-      if (!selected?.length || selected.includes(collection)) {
-        iconList.push(icon);
-        if (!groups[collection]) groups[collection] = [];
-        groups[collection].push(name);
-      }
+      iconList.push(icon);
+      if (!groups[collection]) groups[collection] = [];
+      groups[collection].push(name);
     });
-    return groups;
+    return { groups, list: iconList };
   };
   const getIconPaths = async (groups: IconGroups) => {
     const promises = Object.keys(groups).map(async (collection: string) => {
@@ -110,16 +121,43 @@
     loading = true;
     iconList = [];
     iconPaths = {};
-    const allIcons = await searchIcons(searchQuery);
+    const allIcons = await searchIcons(searchQuery, selectedCollections);
     if (!allIcons?.length) {
       loading = false;
     } else {
-      const iconGroups = groupIcons(allIcons, selectedCollections);
+      const { groups: iconGroups, list } = groupIcons(
+        allIcons,
+        selectedCollections
+      );
+      iconList = list;
       iconPaths = await getIconPaths(iconGroups);
       loading = false;
+      // AÑADE TODOS LOS ICONOS de una collection en un BOARD
+      // para saber que colecciones funcionan bien y cuales NO
+      // PERO EL PROBLEMA ESTA CLARO:
+      // UN SVG CON TAMAÑO PERSONALIZADO, correctamente formado, siempre se inserta en penpot al tamaño de su viewBox
+      // se IGNORA el tamaño especificado con los atributos width y height, aunque es reconocido porque se indica en los atributos del SVG importado
+      // desde un plugin, se puede aplicar el metodo resize al SVG, pero los strokes no escalan bien
+      // desde la interfaz, se pueden modificar los valores de width y height, pero los strokes no escalan bien
+      // LA UNICA forma de escalar correctamente un SVG, es con proporcion de escala ENABLED (K) y redimensionando la CAJA contenedora de la SHAPE
+      // con el metodo shape.resize y cambiando los valores de width y height en la interfaz, el efecto siempre es el mismo
+      // y es el mismo efecto que si se redimensiona la caja de la shape con proporcion de escala DISABLED
+      // testeado con varias colecciones de iconos.
+      // El comportamiento es el mismo, pegando un SVG en la interfaz, o insertandolo a traves de un plugin (esto descarta que el problema sea la generación del SVG)
+      // En FIGMA, el comportamiento es similar, si se desactiva la proporcion de escala, los strokes de un SVG escalan mal
+      // pero lo que FIGMA si hace bien, es insertar un SVG con el tamaño indicado en los atributos width y height (pegar un SVG como string en la interfaz)
+      //
+      // createAllIconsFromList(iconList);
     }
   };
-  const getSVGfromAPI = async (icon: string, size: number) => {
+  const createAllIconsFromList = async (list: string[]) => {
+    list.forEach((icon) => {
+      setTimeout(() => {
+        handleClickIcon(icon);
+      }, 100);
+    });
+  };
+  const getSVGfromAPI = async (icon: string, size: number | string) => {
     const [collection, name] = icon.split(":");
     const url = `/${collection}/${name}.svg`;
     const params = {
@@ -158,11 +196,13 @@
     const iconData = getIconDataCustom(icon);
     if (!iconData) return null;
     const { data, path } = iconData;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${data.top} ${data.left} ${data.width} ${data.height}">${path}</svg>`;
+    const svgDimensions = size ? `width="${size}" height="${size}"` : "";
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" ${svgDimensions} viewBox="${data.top} ${data.left} ${data.width} ${data.height}">${path}</svg>`;
     return svg;
   };
-  const handleClickIcon = async (icon: string) => {
-    const svg = await getSVGfromAPI(icon, iconSize);
+  const handleClickIcon = (icon: string) => {
+    // const svg = await getSVGfromAPI(icon, "unset");
+    const svg = getSvgCustom(icon, iconSize);
     const { data } = getIconDataCustom(icon);
     if (!svg) return;
     const message = {
@@ -171,17 +211,18 @@
       data: {
         icon,
         size: iconSize,
-        scale: data.width / iconSize, // scale of the svg based on viewBox size, to scale strokes
       },
     };
     parent.postMessage(message, "*");
   };
   const handleSelectCollection = (collection: string) => {
-    if (selectedCollections.includes(collection)) {
-      selectedCollections = selectedCollections.filter((c) => c !== collection);
+    let newSelected = [...selectedCollections];
+    if (newSelected.includes(collection)) {
+      newSelected = newSelected.filter((c) => c !== collection);
     } else {
-      selectedCollections.push(collection);
+      newSelected.push(collection);
     }
+    selectedCollections = newSelected;
     handleSearchIcons();
   };
   const isSelectedCollection = (collection: string) => {
@@ -205,10 +246,6 @@
 <svelte:window onmessage={handleMessage} />
 <main data-theme={theme}>
   <label for="search">Search icon</label>
-  <small
-    >{totalPages} pages, {iconsPerPage} per page, loaded {loadedPages}</small
-  >
-  <input bind:value={iconSize} type="number" placeholder="size" />
   <input
     bind:value={searchQuery}
     onchange={handleChangeInput}
@@ -225,7 +262,7 @@
           class:active={isSelectedCollection(col.prefix)}
           onclick={() => handleSelectCollection(col.prefix)}
         >
-          {col.name}
+          {col.name}::{col.prefix}
         </li>
       {/each}
     </ul>
@@ -240,6 +277,25 @@
   {:else}
     <div>No results | Hit return to search</div>
   {/if}
+
+  <!-- <input bind:value={iconSize} type="number" placeholder="size" /> -->
+  <div class="button-group">
+    {#each sizeValues as size}
+      <button
+        onclick={() => changeIconSize(size)}
+        class:active={iconSize === size}
+      >
+        {size}
+      </button>
+    {/each}
+    <button onclick={() => changeIconSize(0)} class:active={iconSize === 0}>
+      original
+    </button>
+  </div>
+  <small>Some icons are not well resized ?</small>
+  <small
+    >{totalPages} pages, {iconsPerPage} per page, loaded {loadedPages}</small
+  >
 
   {#if !loading && iconCount}
     <ul class="icon-list">
@@ -268,6 +324,7 @@
       gap: 0.2rem;
       max-height: 330px;
       overflow-y: auto;
+      padding: 0.4rem 0;
     }
     .icon-item {
       opacity: 0.7;
@@ -289,6 +346,14 @@
     li.active {
       font-weight: 900;
       color: orange;
+    }
+    .button-group {
+      display: flex;
+      gap: 0.2rem;
+    }
+    button.active {
+      color: orange;
+      font-weight: 900;
     }
   }
 </style>
