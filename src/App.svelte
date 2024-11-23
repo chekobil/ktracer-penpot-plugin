@@ -119,6 +119,18 @@
       loading = false;
     }
   };
+  const getSVGfromAPI = async (icon: string, size: number) => {
+    const [collection, name] = icon.split(":");
+    const url = `/${collection}/${name}.svg`;
+    const params = {
+      box: 1,
+      height: size,
+    };
+
+    const svgRes = await useAxios(url, { params });
+    // console.log("svgRes for", icon, size, svgRes.data);
+    return svgRes.data;
+  };
   const getIconDataCustom = (icon: string): any => {
     const [col, name] = icon.split(":");
     let alias = name;
@@ -142,16 +154,16 @@
       path: currentIcon.body as string,
     };
   };
-  const getSvgCustom = (icon: string) => {
+  const getSvgCustom = (icon: string, size: string = "80%") => {
     const iconData = getIconDataCustom(icon);
     if (!iconData) return null;
     const { data, path } = iconData;
-    const iconSize = "80%";
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize}" height="${iconSize}" viewBox="${data.top} ${data.left} ${data.width} ${data.height}">${path}</svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${data.top} ${data.left} ${data.width} ${data.height}">${path}</svg>`;
     return svg;
   };
-  const handleClickIcon = (icon: string) => {
-    const svg = getSvgCustom(icon);
+  const handleClickIcon = async (icon: string) => {
+    const svg = await getSVGfromAPI(icon, iconSize);
+    const { data } = getIconDataCustom(icon);
     if (!svg) return;
     const message = {
       type: "create-svg",
@@ -159,6 +171,7 @@
       data: {
         icon,
         size: iconSize,
+        scale: data.width / iconSize, // scale of the svg based on viewBox size, to scale strokes
       },
     };
     parent.postMessage(message, "*");
