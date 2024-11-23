@@ -33,7 +33,7 @@ main {
   color: var(--text-color);
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
   min-width: var(--main-width);
   max-width: var(--main-width);
 }
