@@ -18,6 +18,21 @@ penpot.ui.onMessage((message: PluginMessageEvent) => {
       centerShape(shape);
       selectShape(shape);
     }
+  } else if (message.type === "create-svg-raw") {
+    const svg = message.content;
+    const shapeName = message.data.icon;
+    const shapeSize = Number(message.data.size);
+    console.log("SVG::", shapeName, svg);
+
+    const shape = penpot.createShapeFromSvg(svg);
+    if (shape) {
+      centerShape(shape);
+      shape.resize(shapeSize, shapeSize);
+      shape.name = shapeName;
+      shape.proportionLock = true;
+      shape.constraintsHorizontal = "scale";
+      shape.constraintsVertical = "scale";
+    }
   } else if (message.type === "create-svg") {
     const svg = message.content;
     const shapeName = message.data.icon;
@@ -33,7 +48,7 @@ penpot.ui.onMessage((message: PluginMessageEvent) => {
     } else {
       board = penpot.createBoard();
       board.name = "icon-collection";
-      board.resize(300, 160);
+      board.resize(220, 350);
       centerShape(board);
       flex = board.addFlexLayout();
       flex.dir = "row";
@@ -55,31 +70,39 @@ penpot.ui.onMessage((message: PluginMessageEvent) => {
     // shapes.push(board);
     const shape = penpot.createShapeFromSvg(svg);
     if (shape) {
+      if (shapeSize) shape.resize(shapeSize, shapeSize);
       shape.name = shapeName;
       shape.proportionLock = true;
       shape.constraintsHorizontal = "scale";
       shape.constraintsVertical = "scale";
-      shape.children.forEach((child) => {
-        // SCALE strokes, the same scale the shape is transformed from the viewBox
-        if (child.type === "path" && child.strokes?.length) {
-          const newStrokes: Shape["strokes"] = [];
-          const currentStrokes = [...child.strokes];
-          currentStrokes?.forEach((stroke) => {
-            if (stroke.strokeWidth) {
-              const newStroke = parseFloat(
-                Number(stroke.strokeWidth / shapeScale).toFixed(2)
-              );
-              stroke.strokeWidth = newStroke;
-            }
-            newStrokes.push(stroke);
-          });
-          child.strokes = [...newStrokes];
-          // console.log("SHAPE::", shapeScale, newStrokes, child.strokes);
-        }
-      });
+      console.log("SHAPE GROUP??::", shape);
+
+      // NO SE PUEDE ESCALAR TODO, circulos, bordes, etc, es imposible
+      // el resize debe habilitar/deshabilitar el escalado proporcional
+      // shape.children.forEach((child) => {
+      //   console.log("CHILD::", child);
+      //   // SCALE strokes, the same scale the shape is transformed from the viewBox
+      //   if (child.type === "path" && child.strokes?.length) {
+      //     const newStrokes: Shape["strokes"] = [];
+      //     const currentStrokes = [...child.strokes];
+      //     currentStrokes?.forEach((stroke) => {
+      //       if (stroke.strokeWidth) {
+      //         const newStroke = parseFloat(
+      //           Number(stroke.strokeWidth / shapeScale).toFixed(2)
+      //         );
+      //         stroke.strokeWidth = newStroke;
+      //       }
+      //       newStrokes.push(stroke);
+      //     });
+      //     child.strokes = [...newStrokes];
+      //     // console.log("SHAPE::", shapeScale, newStrokes, child.strokes);
+      //   }
+      // });
 
       board.appendChild(shape);
-      shape.resize(shapeSize, shapeSize);
+      // resize en la UI equivale a escalar cambiando los valores de width y height
+      // NUNCA se tiene en cuenta el valor de proportional scale (ENABLED es cuando escala bien)
+      // el valor de proportionalsScale solo es tenido en cuenta cuando se escala una shape desde la interfaz, moviendo uno de los extremos, entonces, SOLO entonces, se tiene en cuenta el valor de proportional scale
     }
   }
 });
