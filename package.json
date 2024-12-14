@@ -1,7 +1,7 @@
 {
-  "name": "svelte-example-plugin",
+  "name": "ktracer-penpot-plugin",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev:plugin": "vite build --watch & vite preview",
@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json",
     "wasm:build": "cd crates/vtracer && wasm-pack build",
-    "wasm:copy": "cp -r crates/vtracer/pkg node_modules/vtracer-webapp"
+    "wasm:copy": "cp -r crates/vtracer/pkg node_modules/vtracer-webapp",
+    "surge:upload": "surge ./dist --domain penpot-plugin-ktracer.surge.sh",
+    "deploy": "pnpm run build && pnpm run surge:upload"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
