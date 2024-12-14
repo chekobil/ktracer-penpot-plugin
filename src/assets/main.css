@@ -26,7 +26,9 @@ main[data-theme="dark"] {
   --text-color: rgba(255, 255, 255, 0.87);
 }
 main {
-  --main-width: 330px;
+  --main-width-min: 280px;
+  --main-width-max: 460px;
+  --main-height: 600px;
   padding: 0.8rem 1rem;
   color-scheme: light dark;
   background-color: var(--background-color);
@@ -34,8 +36,9 @@ main {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  min-width: var(--main-width);
-  max-width: var(--main-width);
+  width: 100vw;
+  max-width: var(--main-width-max);
+  height: var(--main-height);
 }
 
 button {

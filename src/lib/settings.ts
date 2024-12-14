@@ -1,0 +1,136 @@
+export const settings = [
+  {
+    title: "Clustering",
+    description: "Algorithm for segmentation and grouping of pixel clusters",
+    key: "clusteringHierarchical",
+    type: "select",
+    default: "stacked",
+    options: [
+      {
+        name: "cutout",
+        value: "cutout",
+        description: "Shapes disjoint with others",
+      },
+      {
+        name: "stacked",
+        value: "stacked",
+        description: "Stack shapes on top of another",
+      },
+    ],
+  },
+  {
+    key: "clusteringMode",
+    type: "select",
+    default: "color",
+    options: [
+      {
+        name: "B/W",
+        value: "binary",
+        description: "Black & White, binary image",
+      },
+      {
+        name: "Color",
+        value: "color",
+        description: "True color image",
+      },
+    ],
+  },
+  {
+    title: "Filter Speckle (Cleaner)",
+    description: "Discard patches smaller than X pixels in size",
+    key: "filterSpeckle",
+    type: "range",
+    min: 0,
+    max: 128,
+    default: 10,
+  },
+  {
+    title: "Color Precision (More accurate)",
+    description: "Number of significant bits to use in a RGB channel",
+    key: "colorPrecision",
+    type: "range",
+    min: 1,
+    max: 8,
+    default: 6,
+  },
+  {
+    title: "Gradient Step (Less layers)",
+    description: "Color difference between gradient layers",
+    key: "layerDifference",
+    type: "range",
+    min: 1,
+    max: 128,
+    default: 16,
+  },
+  {
+    title: "Curve Fitting",
+    description: "Algorithm for converting clusters to shapes",
+    key: "mode",
+    type: "select",
+    default: "spline",
+    options: [
+      {
+        name: "pixel",
+        value: "pixel",
+        description: "Exact cluster boundary",
+      },
+      {
+        name: "polygon",
+        value: "polygon",
+        description: "Simplify to poligon",
+      },
+      {
+        name: "spline",
+        value: "spline",
+        description: "Smooth and curve-fit",
+      },
+      {
+        name: "none",
+        value: "none",
+        description: "No curve fitting",
+      },
+    ],
+  },
+  {
+    title: "Corner threshold (smoother)",
+    description:
+      "Minimum Momentary Angle (in degrees) to be considered a corner (to be kept after smoothing)",
+    key: "cornerThreshold",
+    type: "range",
+    min: 1,
+    max: 180,
+    default: 60,
+  },
+  {
+    title: "Segment length (More coarse)",
+    description:
+      "Perform Iterative Subdivide Smooth until all segments are shorter than this length",
+    key: "lengthThreshold",
+    type: "range",
+    min: 3.5,
+    max: 10,
+    step: 0.5,
+    default: 0.5,
+  },
+  {
+    title: "Splice Threshold (Less accurate)",
+    description:
+      "Minimum Angle Displacement (in degrees) to be considered a cutting point between curves",
+    key: "spliceThreshold",
+    type: "range",
+    min: 0,
+    max: 180,
+    step: 1,
+    default: 45,
+  },
+  {
+    title: "Path Precision (More digits)",
+    description: "Number of decimal places used in svg path string ",
+    key: "pathPrecision",
+    type: "range",
+    min: 0,
+    max: 16,
+    step: 1,
+    default: 8,
+  },
+];

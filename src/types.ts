@@ -7,6 +7,6 @@ interface MessageData {
 }
 export interface PluginMessageEvent {
   type: string;
-  content: string;
-  data: MessageData;
+  content?: string;
+  data?: MessageData;
 }
