@@ -25,6 +25,7 @@
   import type SlDrawer from "@shoelace-style/shoelace/dist/components/drawer/drawer.js";
   import Range from "./components/Range.svelte";
   import Select from "./components/Select.svelte";
+  import DrawerMessage from "./components/DrawerMessage.svelte";
 
   import { type ConverterRunner, createConverter } from "./lib/tracer";
   import { settings as settingsFull } from "./lib/settings";
@@ -251,13 +252,16 @@
           />
         {/if}
       {/each}
+      <DrawerMessage />
     </div>
-    <sl-button-group label="Alignment" slot="footer">
-      <sl-button size="small" onclick={resetSettings}>
-        Reset to defaults
-      </sl-button>
-      <sl-button size="small" onclick={closeOptions}> Close </sl-button>
-    </sl-button-group>
+    <div slot="footer">
+      <sl-button-group label="Alignment">
+        <sl-button size="small" onclick={resetSettings}>
+          Reset to defaults
+        </sl-button>
+        <sl-button size="small" onclick={closeOptions}> Close </sl-button>
+      </sl-button-group>
+    </div>
   </sl-drawer>
 
   <div class="hstack end">
