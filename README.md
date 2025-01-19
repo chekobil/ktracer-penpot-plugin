@@ -9,6 +9,8 @@ Use it inside Penpot app as a plugin or as a [standalone app](https://penpot-plu
 
 This app is using the awesome technology from [VisionCortex](https://github.com/visioncortex/vtracer)
 
+![certificate_penpot_plugins_contest_Chekobil](https://github.com/user-attachments/assets/0a64fb13-954f-412b-94b2-133870f605b9)
+
 # Roadmap
 
 - [ ] Limit the maximum input image size, or at least warn the user.
